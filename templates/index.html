@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coqui TTS Generator (UI Ligero)</title>
+    <style>
+        /* Estilos CSS (Se mantienen los previos, con ajustes menores) */
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #4CAF50;
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h2 {
+            color: #4CAF50;
+            margin-top: 25px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .dino-art {
+            font-family: monospace;
+            white-space: pre;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #8BC34A;
+            padding: 10px;
+            border: 1px dashed #333;
+            border-radius: 8px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        textarea, select, input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+            box-sizing: border-box;
+        }
+
+        .param-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .param-group label {
+            width: 30%;
+            margin-right: 15px;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .param-group input {
+            width: 20%;
+            margin-bottom: 0;
+        }
+
+        .param-description {
+            width: 50%;
+            font-size: 0.9em;
+            color: #aaa;
+            margin-left: 15px;
+        }
+
+        .dir-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .dir-selector input[type="text"] {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+
+        .dir-selector button {
+            padding: 10px 15px;
+            width: auto;
+            margin-bottom: 15px;
+            white-space: nowrap;
+        }
+
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #generatedList {
+            list-style: none;
+            padding: 0;
+        }
+
+        #generatedList li {
+            background-color: #333;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .filename-display {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+        }
+        
+        .filename-input {
+            flex-grow: 1;
+            padding: 5px 10px;
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+            font-size: 14px;
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 3px solid;
+            background-color: #252525;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .log-entry.api_request {
+            border-left-color: #2196F3;
+            background-color: #1a237e;
+        }
+        
+        .log-entry.api_response {
+            border-left-color: #4CAF50;
+            background-color: #1b5e20;
+        }
+        
+        .log-entry.api_error {
+            border-left-color: #f44336;
+            background-color: #b71c1c;
+        }
+        
+        .log-entry.info {
+            border-left-color: #00BCD4;
+            background-color: #004d40;
+        }
+        
+        .log-timestamp {
+            color: #888;
+            font-size: 11px;
+            margin-right: 10px;
+        }
+        
+        .log-message {
+            color: #e0e0e0;
+            font-weight: 500;
+        }
+        
+        .log-data {
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 11px;
+        }
+        
+        .log-data strong {
+            color: #fff;
+        }
+        
+        .file-source-badge {
+            white-space: nowrap;
+        }
+
+        .audio-player-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 50%;
+        }
+
+        .audio-player-controls audio {
+            width: 100%;
+            height: 30px;
+        }
+
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .status-message.success {
+            background-color: #38c172;
+            color: #1a1a1a;
+        }
+        .status-message.error {
+            background-color: #e3342f;
+            color: white;
+        }
+
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🐸 Coqui TTS Generator (XTTS-v2)</h1>
+
+        <div class="dino-art">
+            _.-.        <span style="color: #4CAF50;">Hola! Listo para generar audio.</span><br>
+           (9 o 9)       <span style="color: #4CAF50;">Selecciona una voz y escribe tu texto.</span><br>
+            / V \\<br>
+           (___)\/
+        </div>
+
+
+
+        <form id="ttsForm">
+            <h2>⚙️ Configuración Básica</h2>
+
+            <label for="samplesDirInput">📁 Directorio de Muestras (Samples):</label>
+            <div class="dir-selector">
+                <input type="text" id="samplesDirInput" name="samples_dir" value="{{ current_samples_dir }}" required>
+                <button type="button" id="setDirBtn">Cambiar</button>
+            </div>
+
+
+            <label for="sampleSelect">🎤 Seleccionar Muestra de Voz (samples/):</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                <select id="sampleSelect" name="sample" required style="flex-grow: 1; margin-bottom: 0;">
+                    {% for sample in samples %}
+                        <option value="{{ sample }}" data-sample-url="{{ url_for('sample_files', filename=sample) }}">{{ sample }}</option>
+                    {% else %}
+                        <option value="" disabled selected>No se encontraron samples</option>
+                    {% endfor %}
+                </select>
+                <button type="button" id="playSampleBtn" style="padding: 10px 15px; width: auto; margin-bottom: 0;" title="Reproducir/Detener muestra">
+                    ▶️ Play
+                </button>
+            </div>
+            <audio id="sampleAudioPlayer" style="display: none;"></audio>
+            
+            <label for="uploadSampleInput">📤 Subir Nueva Muestra de Voz:</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="file" id="uploadSampleInput" accept="audio/*" style="flex-grow: 1; margin-bottom: 0;">
+                <button type="button" id="uploadSampleBtn" style="padding: 10px 15px; width: auto; margin-bottom: 15px;">
+                    📤 Subir
+                </button>
+            </div>
+
+            <label for="prefixInput">🏷️ Prefijo del Archivo Generado (ej: 'andres_clonado'):</label>
+            <input type="text" id="prefixInput" name="prefix" value="audio_generado" required>
+
+            <div class="param-group" style="margin-top: 25px;">
+                <label for="overwriteSwitch">💾 Sobrescribir Archivo:</label>
+                <input type="checkbox" id="overwriteSwitch" name="overwrite" style="width: 20px; height: 20px; margin-right: 25px;">
+                <span class="param-description">Si está marcado, el audio se guardará como <code>[prefijo].wav</code> **sobrescribiendo** el anterior para ahorrar espacio.</span>
+            </div>
+            <label for="languageSelect">🗣️ Idioma de Síntesis:</label>
+            <select id="languageSelect" name="language" required>
+                {% for lang in config['AVAILABLE_LANGUAGES'] %}
+                    <option value="{{ lang }}" {% if lang == config['TARGET_LANGUAGE'] %}selected{% endif %}>
+                        {{ lang }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="textInput">📝 Texto a Sintetizar:</label>
+            <textarea id="textInput" name="text" rows="6" required>¡Hola! Este es un texto de prueba para la voz clonada argentina. Usamos XTTS-v2 con los ajustes de realismo que configuramos.</textarea>
+
+
+            <h2>🔬 Ajustes Avanzados del Modelo (Hiperparámetros)</h2>
+
+            <div class="param-group">
+                <label for="speedInput">Velocidad (Speed):</label>
+                <input type="number" id="speedInput" name="speed" step="0.01" min="0.5" max="2.0"
+                       value="{{ config['DEFAULT_SPEED'] }}" required>
+                <span class="param-description">Controla la cadencia del habla (1.0 = normal). Min: 0.5, Max: 2.0.</span>
+            </div>
+
+            <div class="param-group">
+                <label for="tempInput">Temperatura (Temperature):</label>
+                <input type="number" id="tempInput" name="temperature" step="0.01" min="0.01" max="1.0"
+                       value="{{ config['DEFAULT_TEMPERATURE'] }}" required>
+                <span class="param-description">Ajusta la aleatoriedad. **0.01 (Mínimo)** = Máxima fidelidad al sample. Max: 1.0.</span>
+            </div>
+
+            <div class="param-group">
+                <label for="repPenInput">Penalidad Repetición:</label>
+                <input type="number" id="repPenInput" name="repetition_penalty" step="0.1" min="1.0" max="10.0"
+                       value="{{ config['DEFAULT_REPETITION_PENALTY'] }}" required>
+                <span class="param-description">Evita la repetición de sonidos/sílabas. **Valores altos (5.0 a 7.0)** mejoran la fluidez. Min: 1.0, Max: 10.0.</span>
+            </div>
+
+            <div class="param-group">
+                <label for="topPInput">Top P:</label>
+                <input type="number" id="topPInput" name="top_p" step="0.01" min="0.1" max="1.0"
+                       value="{{ config['DEFAULT_TOP_P'] }}" required>
+                <span class="param-description">Muestreo Top-P. Controla la diversidad de palabras. Min: 0.1, Max: 1.0.</span>
+            </div>
+
+            <div class="param-group">
+                <label for="topKInput">Top K:</label>
+                <input type="number" id="topKInput" name="top_k" step="1" min="1" max="100"
+                       value="{{ config['DEFAULT_TOP_K'] }}" required>
+                <span class="param-description">Limita la selección de tokens. Valor óptimo: **40 a 50**. Min: 1, Max: 100.</span>
+            </div>
+
+            <button type="submit" id="generateBtn">✨ Generar Audio</button>
+        </form>
+
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>🎧 Audios Generados (<span id="fileCount">{{ generated_files|length }}</span>)</h2>
+        <ul id="generatedList">
+            {% for filename in generated_files %}
+                <li data-filename="{{ filename }}" data-source="{% if filename.startswith('api_audio_generated') %}API{% else %}UI{% endif %}">
+                    <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                        <span class="filename-display" data-filename="{{ filename }}">{{ filename }}</span>
+                        <span class="file-source-badge" style="padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; {% if filename.startswith('api_audio_generated') %}background-color: #2196F3; color: white;{% else %}background-color: #4CAF50; color: white;{% endif %}">
+                            {% if filename.startswith('api_audio_generated') %}📡 API{% else %}🖥️ UI{% endif %}
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; width: 60%;">
+                        <div class="audio-player-controls" style="flex-grow: 1;">
+                                <audio controls src="{{ url_for('generated_files', filename=filename) }}"></audio>
+                        </div>
+                        <button type="button" class="edit-filename-btn" data-filename="{{ filename }}" style="padding: 5px 10px; font-size: 14px; background-color: #2196F3;" title="Editar nombre">
+                            ✏️
+                        </button>
+                        <button type="button" class="delete-file-btn" data-filename="{{ filename }}" style="padding: 5px 10px; font-size: 14px; background-color: #f44336;" title="Eliminar">
+                            🗑️
+                        </button>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+        
+        <!-- Paginador -->
+        <div id="paginationContainer" class="pagination-container" style="display: none;">
+            <button id="paginationFirst" class="pagination-btn" title="Primera página">⏮️</button>
+            <button id="paginationPrev" class="pagination-btn" title="Página anterior">◀️</button>
+            <div id="paginationNumbers" class="pagination-numbers"></div>
+            <button id="paginationNext" class="pagination-btn" title="Página siguiente">▶️</button>
+            <button id="paginationLast" class="pagination-btn" title="Última página">⏭️</button>
+            <span id="paginationInfo" class="pagination-info"></span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>📊 Logs de la API en Tiempo Real</h2>
+        <div id="logsContainer" style="background-color: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 15px; max-height: 400px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px;">
+            <div id="logsList" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="color: #888; font-style: italic;">Esperando peticiones de la API...</div>
+            </div>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button type="button" id="clearLogsBtn" style="padding: 8px 15px; background-color: #666;">🗑️ Limpiar Logs</button>
+            <button type="button" id="toggleLogsBtn" style="padding: 8px 15px; background-color: #666;">⏸️ Pausar</button>
+            <span id="logsStatus" style="color: #4CAF50; margin-left: 10px; line-height: 35px;">● Conectado</span>
+        </div>
+    </div>
+
+    <script>
+        const ttsForm = document.getElementById('ttsForm');
+        const generatedList = document.getElementById('generatedList');
+        const statusMessage = document.getElementById('statusMessage');
+        const generateBtn = document.getElementById('generateBtn');
+        const fileCountSpan = document.getElementById('fileCount');
+        
+        // Variables de paginación
+        const paginationContainer = document.getElementById('paginationContainer');
+        const paginationNumbers = document.getElementById('paginationNumbers');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const paginationFirst = document.getElementById('paginationFirst');
+        const paginationPrev = document.getElementById('paginationPrev');
+        const paginationNext = document.getElementById('paginationNext');
+        const paginationLast = document.getElementById('paginationLast');
+        
+        let currentPage = 1;
+        const itemsPerPage = 10; // Número de audios por página
+        let allFiles = []; // Almacena todos los archivos
+        const setDirBtn = document.getElementById('setDirBtn');
+        const samplesDirInput = document.getElementById('samplesDirInput');
+        const sampleSelect = document.getElementById('sampleSelect');
+        const playSampleBtn = document.getElementById('playSampleBtn');
+        const sampleAudioPlayer = document.getElementById('sampleAudioPlayer');
+        const uploadSampleInput = document.getElementById('uploadSampleInput');
+        const uploadSampleBtn = document.getElementById('uploadSampleBtn');
+        const speedInput = document.getElementById('speedInput');
+        const tempInput = document.getElementById('tempInput');
+        const repPenInput = document.getElementById('repPenInput');
+        const topPInput = document.getElementById('topPInput');
+        const topKInput = document.getElementById('topKInput');
+        const languageSelect = document.getElementById('languageSelect');
+        const prefixInput = document.getElementById('prefixInput');
+        
+        let isPlayingSample = false;
+
+        // ⭐️ Inicializa el dropdown con el sample de la sesión
+        const lastUsedSample = '{{ last_used_sample }}';
+        if (lastUsedSample) {
+            sampleSelect.value = lastUsedSample;
+        }
+
+        function displayStatus(type, message) {
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+        }
+
+        // --- Lógica del Botón Cambiar Directorio de Samples ---
+        setDirBtn.addEventListener('click', async function() {
+            const newDir = samplesDirInput.value.trim();
+            if (!newDir) {
+                displayStatus('error', '❌ La ruta del directorio no puede estar vacía.');
+                return;
+            }
+
+            setDirBtn.disabled = true;
+            setDirBtn.textContent = 'Cambiando...';
+
+            try {
+                const response = await fetch('/set_samples_dir', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ directory: newDir })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    displayStatus('success', `📁 Directorio actualizado. ${result.samples.length} muestras encontradas.`);
+
+                    // Actualizar el dropdown de samples
+                    sampleSelect.innerHTML = '';
+                    if (result.samples.length > 0) {
+                        result.samples.forEach(sample => {
+                            const option = document.createElement('option');
+                            option.value = sample;
+                            option.textContent = sample;
+                            // Codificar el nombre del archivo para la URL
+                            const encodedSample = encodeURIComponent(sample);
+                            option.setAttribute('data-sample-url', `/samples/${encodedSample}`);
+                            sampleSelect.appendChild(option);
+                        });
+                        // Seleccionar el primer sample de la nueva lista
+                        sampleSelect.value = result.samples[0];
+                        // ⭐️ Forzar la persistencia del nuevo sample principal
+                        await persistLastSample(result.samples[0]);
+                        // Disparar evento change
+                        sampleSelect.dispatchEvent(new Event('change'));
+                    } else {
+                         sampleSelect.innerHTML = '<option value="" disabled selected>No se encontraron samples</option>';
+                    }
+                    samplesDirInput.value = result.samples_dir; // Refresca la ruta (maneja barras / \)
+                } else {
+                    displayStatus('error', `❌ Error al cambiar directorio: ${result.message}`);
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                displayStatus('error', '❌ Error de conexión al intentar cambiar el directorio.');
+            } finally {
+                setDirBtn.disabled = false;
+                setDirBtn.textContent = 'Cambiar';
+            }
+        });
+
+
+        // 🟢 NUEVA FUNCIÓN: Persiste el sample seleccionado en el backend
+        async function persistLastSample(sample) {
+             try {
+                const response = await fetch('/set_last_sample', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sample: sample })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error("Error al persistir LAST_USED_SAMPLE:", result.message);
+                }
+            } catch (error) {
+                console.error('Error de conexión al actualizar el sample:', error);
+            }
+        }
+
+        // 🟢 NUEVO EVENTO: Actualiza el sample al cambiar el dropdown
+        sampleSelect.addEventListener('change', function() {
+            persistLastSample(this.value);
+            // Detener reproducción si está sonando
+            if (isPlayingSample) {
+                sampleAudioPlayer.pause();
+                sampleAudioPlayer.currentTime = 0;
+                isPlayingSample = false;
+                playSampleBtn.textContent = '▶️ Play';
+            }
+        });
+        
+        // 🟢 FUNCIÓN: Reproducir/Detener muestra de audio
+        playSampleBtn.addEventListener('click', function() {
+            const selectedValue = sampleSelect.value;
+            
+            if (!selectedValue || selectedValue === '') {
+                displayStatus('error', '❌ No hay muestra seleccionada.');
+                return;
+            }
+            
+            // Construir la URL del sample (codificar el nombre del archivo)
+            const encodedSample = encodeURIComponent(selectedValue);
+            const sampleUrl = `/samples/${encodedSample}`;
+            
+            if (isPlayingSample) {
+                // Detener
+                sampleAudioPlayer.pause();
+                sampleAudioPlayer.currentTime = 0;
+                isPlayingSample = false;
+                playSampleBtn.textContent = '▶️ Play';
+            } else {
+                // Reproducir
+                sampleAudioPlayer.src = sampleUrl;
+                sampleAudioPlayer.load(); // Forzar carga del nuevo src
+                sampleAudioPlayer.play().then(() => {
+                    isPlayingSample = true;
+                    playSampleBtn.textContent = '⏹️ Stop';
+                }).catch(error => {
+                    console.error('Error al reproducir:', error);
+                    displayStatus('error', '❌ Error al reproducir el audio. Verifica que el archivo sea válido.');
+                    isPlayingSample = false;
+                    playSampleBtn.textContent = '▶️ Play';
+                });
+            }
+        });
+        
+        // Detener cuando el audio termine
+        sampleAudioPlayer.addEventListener('ended', function() {
+            isPlayingSample = false;
+            playSampleBtn.textContent = '▶️ Play';
+        });
+        
+        // 🟢 FUNCIÓN: Subir nuevo archivo de audio como muestra
+        uploadSampleBtn.addEventListener('click', async function() {
+            const file = uploadSampleInput.files[0];
+            
+            if (!file) {
+                displayStatus('error', '❌ Por favor, selecciona un archivo de audio.');
+                return;
+            }
+            
+            uploadSampleBtn.disabled = true;
+            uploadSampleBtn.textContent = '⏳ Subiendo...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/upload_sample', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayStatus('success', `✅ Archivo '${result.filename}' subido correctamente.`);
+                    
+                    // Actualizar el dropdown de samples
+                    sampleSelect.innerHTML = '';
+                    if (result.samples.length > 0) {
+                        result.samples.forEach(sample => {
+                            const option = document.createElement('option');
+                            option.value = sample;
+                            option.textContent = sample;
+                            // Codificar el nombre del archivo para la URL
+                            const encodedSample = encodeURIComponent(sample);
+                            option.setAttribute('data-sample-url', `/samples/${encodedSample}`);
+                            sampleSelect.appendChild(option);
+                        });
+                        // Seleccionar el archivo recién subido
+                        sampleSelect.value = result.filename;
+                        // Forzar actualización del estado
+                        await persistLastSample(result.filename);
+                        
+                        // Disparar evento change para actualizar el estado
+                        sampleSelect.dispatchEvent(new Event('change'));
+                        
+                        // Verificar que el atributo data-sample-url esté correcto
+                        const selectedOption = sampleSelect.options[sampleSelect.selectedIndex];
+                        console.log('Sample seleccionado:', result.filename);
+                        console.log('URL del sample:', selectedOption.getAttribute('data-sample-url'));
+                    }
+                    
+                    // Limpiar el input
+                    uploadSampleInput.value = '';
+                } else {
+                    displayStatus('error', `❌ Error al subir archivo: ${result.message}`);
+                }
+                
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                displayStatus('error', '❌ Error de conexión al subir el archivo.');
+            } finally {
+                uploadSampleBtn.disabled = false;
+                uploadSampleBtn.textContent = '📤 Subir';
+            }
+        });
+        
+        // 🟢 FUNCIÓN: Sincronizar parámetros con el backend (para API)
+        async function syncUIState() {
+            const state = {
+                speed: parseFloat(speedInput.value),
+                temperature: parseFloat(tempInput.value),
+                repetition_penalty: parseFloat(repPenInput.value),
+                top_p: parseFloat(topPInput.value),
+                top_k: parseInt(topKInput.value),
+                language: languageSelect.value,
+                prefix: prefixInput.value
+            };
+            
+            try {
+                await fetch('/update_ui_state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(state)
+                });
+            } catch (error) {
+                console.error('Error al sincronizar estado del UI:', error);
+            }
+        }
+        
+        // Sincronizar cuando cambien los parámetros
+        speedInput.addEventListener('change', syncUIState);
+        tempInput.addEventListener('change', syncUIState);
+        repPenInput.addEventListener('change', syncUIState);
+        topPInput.addEventListener('change', syncUIState);
+        topKInput.addEventListener('change', syncUIState);
+        languageSelect.addEventListener('change', syncUIState);
+        prefixInput.addEventListener('change', syncUIState);
+        
+        // Sincronizar el modo de sobrescritura también
+        const overwriteSwitch = document.getElementById('overwriteSwitch');
+        overwriteSwitch.addEventListener('change', async function() {
+            try {
+                await fetch('/set_overwrite_mode', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ overwrite: this.checked })
+                });
+            } catch (error) {
+                console.error('Error al actualizar modo de sobrescritura:', error);
+            }
+        });
+        
+        // Sincronizar estado inicial
+        syncUIState();
+
+
+        // --- Lógica de Generación de Audio (AÑADIDA LÓGICA DE SOBRESCRITURA MEJORADA) ---
+        ttsForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Generando... (puede tardar un minuto)';
+            statusMessage.style.display = 'none';
+
+            const formData = new FormData(ttsForm);
+
+            // Recolectar datos del formulario, incluyendo los hiperparámetros
+            const data = {
+                text: formData.get('text'),
+                sample: formData.get('sample'),
+                prefix: formData.get('prefix'),
+                language: formData.get('language'),
+                speed: parseFloat(formData.get('speed')),
+                temperature: parseFloat(formData.get('temperature')),
+                repetition_penalty: parseFloat(formData.get('repetition_penalty')),
+                top_p: parseFloat(formData.get('top_p')),
+                top_k: parseInt(formData.get('top_k')),
+                // 🟢 CLAVE: Obtener el estado del switch
+                overwrite: document.getElementById('overwriteSwitch').checked
+            };
+
+            if (data.sample === "" || !data.sample) {
+                 displayStatus('error', '❌ No hay muestras de voz seleccionadas.');
+                 generateBtn.disabled = false;
+                 generateBtn.textContent = '✨ Generar Audio';
+                 return;
+            }
+
+            try {
+                const response = await fetch('/generate_audio', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log('✅ Audio generado exitosamente:', result);
+                    displayStatus('success', `✅ Audio generado en ${result.time}. Archivo: ${result.filename}`);
+
+                    // Refrescar la lista después de un delay para asegurar que el archivo esté guardado
+                    setTimeout(async () => {
+                        try {
+                            await refreshGeneratedFilesList();
+                        } catch (error) {
+                            console.error('❌ Error al refrescar lista:', error);
+                        }
+                    }, 500);
+
+                } else {
+                    displayStatus('error', `❌ Error al generar audio: ${result.message}`);
+                }
+
+            } catch (error) {
+                console.error('Error de conexión:', error);
+                displayStatus('error', '❌ Error de conexión con el servidor.');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = '✨ Generar Audio';
+            }
+        });
+        
+        // 🟢 FUNCIÓN: Eliminar archivo generado
+        document.addEventListener('click', async function(e) {
+            if (e.target.classList.contains('delete-file-btn') || e.target.closest('.delete-file-btn')) {
+                const btn = e.target.classList.contains('delete-file-btn') ? e.target : e.target.closest('.delete-file-btn');
+                const filename = btn.getAttribute('data-filename');
+                
+                if (!confirm(`¿Estás seguro de que deseas eliminar "${filename}"?`)) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/delete_generated/${encodeURIComponent(filename)}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Refrescar la lista completa desde el servidor para asegurar sincronización
+                        // Esto es importante porque los nombres de archivos pueden variar mucho
+                        await refreshGeneratedFilesList();
+                        
+                        displayStatus('success', `✅ Archivo '${filename}' eliminado correctamente.`);
+                    } else {
+                        displayStatus('error', `❌ Error: ${result.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error al eliminar archivo:', error);
+                    displayStatus('error', '❌ Error de conexión al eliminar el archivo.');
+                }
+            }
+        });
+        
+        // 🟢 FUNCIÓN: Editar nombre de archivo
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-filename-btn') || e.target.closest('.edit-filename-btn')) {
+                const btn = e.target.classList.contains('edit-filename-btn') ? e.target : e.target.closest('.edit-filename-btn');
+                const filename = btn.getAttribute('data-filename');
+                const listItem = btn.closest('li');
+                const filenameDisplay = listItem.querySelector('.filename-display');
+                
+                // Crear input para editar
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'filename-input';
+                input.value = filename;
+                input.style.width = '100%';
+                
+                // Reemplazar el span con el input
+                filenameDisplay.replaceWith(input);
+                input.focus();
+                input.select();
+                
+                // Guardar al presionar Enter
+                const saveEdit = async () => {
+                    const newFilename = input.value.trim();
+                    
+                    if (!newFilename || newFilename === filename) {
+                        // Cancelar si está vacío o es el mismo
+                        input.replaceWith(filenameDisplay);
+                        return;
+                    }
+                    
+                    // Validar nombre de archivo
+                    if (newFilename.includes('..') || newFilename.includes('/') || newFilename.includes('\\')) {
+                        displayStatus('error', '❌ El nombre del archivo contiene caracteres no permitidos.');
+                        input.replaceWith(filenameDisplay);
+                        return;
+                    }
+                    
+                    try {
+                        const response = await fetch('/rename_generated', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                old_filename: filename,
+                                new_filename: newFilename
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // Refrescar la lista completa desde el servidor para asegurar sincronización
+                            // Esto es importante porque los nombres de archivos pueden variar mucho
+                            await refreshGeneratedFilesList();
+                            
+                            displayStatus('success', `✅ Archivo renombrado a '${newFilename}'.`);
+                        } else {
+                            displayStatus('error', `❌ Error: ${result.message}`);
+                            input.replaceWith(filenameDisplay);
+                        }
+                    } catch (error) {
+                        console.error('Error al renombrar archivo:', error);
+                        displayStatus('error', '❌ Error de conexión al renombrar el archivo.');
+                        input.replaceWith(filenameDisplay);
+                    }
+                };
+                
+                input.addEventListener('blur', saveEdit);
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    } else if (e.key === 'Escape') {
+                        input.replaceWith(filenameDisplay);
+                    }
+                });
+            }
+        });
+        
+        // 🟢 SISTEMA DE LOGS EN TIEMPO REAL
+        const logsList = document.getElementById('logsList');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+        const toggleLogsBtn = document.getElementById('toggleLogsBtn');
+        const logsStatus = document.getElementById('logsStatus');
+        let eventSource = null;
+        let logsPaused = false;
+        let pendingLogs = [];
+        const maxLogs = 100; // Máximo de logs a mantener
+        
+        // 🟢 FUNCIÓN: Reintentos inteligentes con backoff exponencial para verificar que un archivo aparezca
+        async function attemptRefreshWithRetry(expectedFilename, attemptNumber) {
+            const maxAttempts = 5;
+            const baseDelay = 200; // 200ms base
+            const maxDelay = 2000; // Máximo 2 segundos
+            
+            if (attemptNumber >= maxAttempts) {
+                console.warn(`⚠️ No se pudo encontrar el archivo ${expectedFilename} después de ${maxAttempts} intentos`);
+                // Intentar actualizar la lista de todas formas
+                refreshGeneratedFilesList();
+                return;
+            }
+            
+            // Calcular delay con backoff exponencial (200ms, 400ms, 800ms, 1600ms, 2000ms)
+            const delay = Math.min(baseDelay * Math.pow(2, attemptNumber), maxDelay);
+            
+            try {
+                // Actualizar la lista
+                const response = await fetch('/api/generated_files');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Verificar si el archivo esperado está en la lista
+                    const fileExists = result.files.some(file => file.filename === expectedFilename);
+                    
+                    if (fileExists) {
+                        // Archivo encontrado, actualizar la UI
+                        console.log(`✅ Archivo ${expectedFilename} encontrado en intento ${attemptNumber + 1}`);
+                        refreshGeneratedFilesList();
+                    } else {
+                        // Archivo aún no está, reintentar
+                        console.log(`🔄 Archivo ${expectedFilename} no encontrado, reintentando en ${delay}ms (intento ${attemptNumber + 1}/${maxAttempts})`);
+                        setTimeout(() => attemptRefreshWithRetry(expectedFilename, attemptNumber + 1), delay);
+                    }
+                } else {
+                    // Error en la respuesta, reintentar
+                    setTimeout(() => attemptRefreshWithRetry(expectedFilename, attemptNumber + 1), delay);
+                }
+            } catch (error) {
+                console.error(`❌ Error en intento ${attemptNumber + 1}:`, error);
+                // Reintentar en caso de error
+                if (attemptNumber < maxAttempts - 1) {
+                    setTimeout(() => attemptRefreshWithRetry(expectedFilename, attemptNumber + 1), delay);
+                } else {
+                    // Último intento fallido, actualizar la lista de todas formas
+                    refreshGeneratedFilesList();
+                }
+            }
+        }
+        
+        // 🟢 FUNCIÓN: Actualizar lista de archivos generados desde el servidor
+        async function refreshGeneratedFilesList() {
+            try {
+                console.log('🔄 Actualizando lista de archivos generados...');
+                const response = await fetch('/api/generated_files');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Limpiar lista actual
+                    generatedList.innerHTML = '';
+                    
+                    if (result.files.length === 0) {
+                        // Si no hay archivos, mostrar mensaje
+                        const emptyMsg = document.createElement('li');
+                        emptyMsg.innerHTML = '<span style="color: #888; font-style: italic;">No hay archivos generados aún.</span>';
+                        generatedList.appendChild(emptyMsg);
+                    } else {
+                        // Agregar todos los archivos (ordenados por fecha de modificación, más reciente primero)
+                        result.files.forEach(file => {
+                            const listItem = document.createElement('li');
+                            listItem.setAttribute('data-filename', file.filename);
+                            listItem.setAttribute('data-source', file.source);
+                            
+                            // Escapar el nombre del archivo para evitar problemas con caracteres especiales
+                            const escapedFilename = file.filename.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            const escapedUrl = file.url.replace(/"/g, '&quot;');
+                            
+                            const sourceBadge = file.source === 'API' 
+                                ? '<span class="file-source-badge" style="padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background-color: #2196F3; color: white;">📡 API</span>'
+                                : '<span class="file-source-badge" style="padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background-color: #4CAF50; color: white;">🖥️ UI</span>';
+                            
+                            // Construir URL correcta
+                            const audioUrl = `/generated/${encodeURIComponent(file.filename)}`;
+                            
+                            listItem.innerHTML = `
+                                <div style="display: flex; align-items: center; gap: 10px; width: 40%;">
+                                    <span class="filename-display" data-filename="${escapedFilename}">${escapedFilename}</span>
+                                    ${sourceBadge}
+                                </div>
+                                <div style="display: flex; gap: 10px; align-items: center; width: 60%;">
+                                    <div class="audio-player-controls" style="flex-grow: 1;">
+                                        <audio controls src="${audioUrl}"></audio>
+                                    </div>
+                                    <button type="button" class="edit-filename-btn" data-filename="${escapedFilename}" style="padding: 5px 10px; font-size: 14px; background-color: #2196F3;" title="Editar nombre">✏️</button>
+                                    <button type="button" class="delete-file-btn" data-filename="${escapedFilename}" style="padding: 5px 10px; font-size: 14px; background-color: #f44336;" title="Eliminar">🗑️</button>
+                                </div>
+                            `;
+                            generatedList.appendChild(listItem);
+                        });
+                    }
+                    
+                    // Actualizar contador
+                    if (fileCountSpan) {
+                        fileCountSpan.textContent = result.count;
+                    }
+                    console.log(`✅ Lista actualizada: ${result.count} archivo(s)`);
+                } else {
+                    console.error('❌ Error al obtener lista de archivos:', result.message);
+                    displayStatus('error', `❌ Error al obtener lista: ${result.message}`);
+                }
+            } catch (error) {
+                console.error('❌ Error al actualizar lista de archivos:', error);
+                displayStatus('error', `❌ Error al actualizar lista: ${error.message}`);
+            }
+        }
+        
+        function addLogEntry(logEntry) {
+            if (logEntry.type === 'heartbeat') return;
+            
+            // 🟢 Detectar cuando hay cambios en los archivos generados (generación, eliminación, renombrado)
+            if (logEntry.type === 'ui_notification' && logEntry.data && logEntry.data.action) {
+                console.log('🔔 [UI] Notificación recibida:', logEntry.data);
+                const action = logEntry.data.action;
+                // Actualizar la lista para cualquier acción relacionada con archivos
+                if (action === 'file_generated' || action === 'file_deleted' || action === 'file_renamed') {
+                    console.log(`🔄 [UI] Acción detectada: ${action}, source: ${logEntry.data.source}, file_ready: ${logEntry.data.file_ready}`);
+                    // Si el backend indica que el archivo está listo, actualizar inmediatamente
+                    if (logEntry.data.file_ready) {
+                        console.log('✅ [UI] Archivo listo, actualizando lista inmediatamente...');
+                        // Actualizar inmediatamente ya que el backend garantiza que el archivo está listo
+                        refreshGeneratedFilesList();
+                    } else {
+                        console.log('⏳ [UI] Archivo no confirmado, usando reintentos...');
+                        // Si no hay confirmación, usar reintentos inteligentes con backoff exponencial
+                        attemptRefreshWithRetry(logEntry.data.filename, 0);
+                    }
+                }
+            }
+            
+            if (logsPaused) {
+                pendingLogs.push(logEntry);
+                return;
+            }
+            
+            const logDiv = document.createElement('div');
+            logDiv.className = `log-entry ${logEntry.type}`;
+            
+            let html = `<span class="log-timestamp">[${logEntry.timestamp}]</span>`;
+            html += `<span class="log-message">${logEntry.message}</span>`;
+            
+            if (logEntry.data && Object.keys(logEntry.data).length > 0) {
+                html += '<div class="log-data">';
+                for (const [key, value] of Object.entries(logEntry.data)) {
+                    // Formatear mejor algunos campos
+                    if (key === 'text' && typeof value === 'string' && value.length > 50) {
+                        html += `<strong>${key}:</strong> "${value.substring(0, 50)}..." `;
+                    } else {
+                        html += `<strong>${key}:</strong> ${value} `;
+                    }
+                }
+                html += '</div>';
+            }
+            
+            logDiv.innerHTML = html;
+            
+            // Si hay un mensaje de espera, eliminarlo
+            const waitingMsg = logsList.querySelector('div[style*="italic"]');
+            if (waitingMsg) {
+                waitingMsg.remove();
+            }
+            
+            logsList.insertBefore(logDiv, logsList.firstChild);
+            
+            // Limitar número de logs
+            while (logsList.children.length > maxLogs) {
+                logsList.removeChild(logsList.lastChild);
+            }
+            
+            // Auto-scroll al principio
+            const logsContainer = document.getElementById('logsContainer');
+            logsContainer.scrollTop = 0;
+        }
+        
+        function connectLogs() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            console.log('🔌 [SSE] Conectando a /api/logs/stream...');
+            eventSource = new EventSource('/api/logs/stream');
+            
+            eventSource.onopen = function() {
+                console.log('✅ [SSE] Conexión establecida correctamente');
+                logsStatus.textContent = '● Conectado';
+                logsStatus.style.color = '#4CAF50';
+            };
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const logEntry = JSON.parse(event.data);
+                    // Ignorar heartbeats en el log de consola para no saturar
+                    if (logEntry.type !== 'heartbeat') {
+                        console.log('📨 [SSE] Log recibido:', logEntry.type, logEntry.message?.substring(0, 50));
+                    }
+                    addLogEntry(logEntry);
+                } catch (error) {
+                    console.error('❌ Error al parsear log:', error);
+                }
+            };
+            
+            eventSource.onerror = function(error) {
+                console.error('❌ [SSE] Error en conexión de logs:', error);
+                console.error('❌ [SSE] Estado de conexión:', eventSource.readyState);
+                logsStatus.textContent = '● Desconectado';
+                logsStatus.style.color = '#f44336';
+                
+                // Intentar reconectar después de 3 segundos
+                setTimeout(() => {
+                    console.log('🔄 [SSE] Intentando reconectar...');
+                    connectLogs();
+                }, 3000);
+            };
+            
+            // Estado inicial (se actualizará en onopen)
+            logsStatus.textContent = '● Conectando...';
+            logsStatus.style.color = '#ff9800';
+        }
+        
+        clearLogsBtn.addEventListener('click', function() {
+            logsList.innerHTML = '<div style="color: #888; font-style: italic;">Esperando peticiones de la API...</div>';
+            pendingLogs = [];
+        });
+        
+        toggleLogsBtn.addEventListener('click', function() {
+            logsPaused = !logsPaused;
+            
+            if (logsPaused) {
+                toggleLogsBtn.textContent = '▶️ Reanudar';
+                logsStatus.textContent = '● Pausado';
+                logsStatus.style.color = '#ff9800';
+            } else {
+                toggleLogsBtn.textContent = '⏸️ Pausar';
+                logsStatus.textContent = '● Conectado';
+                logsStatus.style.color = '#4CAF50';
+                
+                // Procesar logs pendientes
+                pendingLogs.forEach(log => addLogEntry(log));
+                pendingLogs = [];
+            }
+        });
+        
+        // Conectar al sistema de logs al cargar la página
+        connectLogs();
+    </script>
+
+</body>
+</html>
